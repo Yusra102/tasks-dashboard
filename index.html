@@ -1,0 +1,1447 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tasks Dashboard</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --card:#f7f7fb;
+      --card2:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --accent:#2563eb;
+      --good:#16a34a;
+      --warn:#f59e0b;
+      --bad:#dc2626;
+
+      --radius:14px;
+      --shadow:0 8px 22px rgba(17,24,39,.08);
+
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:linear-gradient(180deg,#ffffff 0%, #fbfbff 100%);
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:18px;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:0;
+      font-size:18px;
+      line-height:1.2;
+      letter-spacing:-.02em;
+    }
+    .sub{
+      margin-top:6px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    .pillbar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      background:var(--card2);
+      color:var(--text);
+      padding:9px 11px;
+      border-radius:11px;
+      font-size:12px;
+      cursor:pointer;
+      box-shadow:0 1px 0 rgba(0,0,0,.02);
+      transition:.15s transform, .15s box-shadow, .15s border-color;
+      user-select:none;
+    }
+    .btn:hover{ transform:translateY(-1px); box-shadow:0 10px 26px rgba(17,24,39,.08); border-color:#d1d5db;}
+    .btn.primary{
+      background:var(--accent);
+      border-color:var(--accent);
+      color:white;
+    }
+    .btn.danger{
+      background:#fff;
+      border-color:#fecaca;
+      color:#991b1b;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      background:var(--card2);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card .head{
+      padding:12px 14px;
+      border-bottom:1px solid var(--border);
+      background:linear-gradient(180deg,#fff 0%, #fbfbff 100%);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card .head h2{
+      margin:0;
+      font-size:13px;
+      letter-spacing:-.01em;
+    }
+    .card .body{ padding:14px; }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap:10px;
+    }
+    @media (max-width: 980px){
+      .kpis{grid-template-columns: repeat(3, minmax(0,1fr));}
+    }
+    @media (max-width: 560px){
+      .kpis{grid-template-columns: repeat(2, minmax(0,1fr));}
+    }
+
+    .kpi{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 10px;
+    }
+    .kpi .label{
+      font-size:11px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:7px;
+    }
+    .kpi .value{
+      font-size:18px;
+      font-weight:700;
+      letter-spacing:-.02em;
+    }
+    .kpi .hint{
+      margin-top:6px;
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .formgrid{
+      display:grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+      gap:10px;
+      align-items:end;
+    }
+    @media (max-width: 980px){
+      .formgrid{grid-template-columns: 1fr 1fr;}
+    }
+
+    label{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin-bottom:6px;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:9px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      font-size:12px;
+      outline:none;
+      background:#fff;
+    }
+    textarea{ min-height:38px; resize:vertical; }
+    input:focus, select:focus, textarea:focus{ border-color:#93c5fd; box-shadow:0 0 0 3px rgba(59,130,246,.12); }
+
+    .rowactions{
+      display:flex;
+      gap:8px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .filters{
+      display:grid;
+      grid-template-columns: 1.6fr 1fr 1fr 1fr 1fr;
+      gap:10px;
+      align-items:end;
+    }
+    @media (max-width: 980px){
+      .filters{grid-template-columns: 1fr 1fr;}
+    }
+
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:9px 10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      height:38px;
+    }
+    .toggle input{ width:auto; margin:0; }
+    .toggle span{ font-size:12px; color:var(--text); }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      font-size:12px;
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+    }
+    th{
+      text-align:left;
+      color:var(--muted);
+      font-weight:600;
+      font-size:11px;
+      background:linear-gradient(180deg,#fff 0%, #fbfbff 100%);
+      position:sticky;
+      top:0;
+      z-index:1;
+    }
+    .tablewrap{
+      max-height:320px;
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:14px;
+    }
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:11px;
+      white-space:nowrap;
+    }
+    .tag.high{ border-color:#fecaca; background:#fff1f2; color:#991b1b;}
+    .tag.med{ border-color:#fde68a; background:#fffbeb; color:#92400e;}
+    .tag.low{ border-color:#bbf7d0; background:#f0fdf4; color:#166534;}
+
+    .status{
+      display:inline-flex;
+      align-items:center;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:11px;
+      white-space:nowrap;
+    }
+    .status.ns{ background:#f3f4f6; color:#374151;}
+    .status.ip{ background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8;}
+    .status.half{ background:#fefce8; border-color:#fde68a; color:#92400e;}
+    .status.done{ background:#f0fdf4; border-color:#bbf7d0; color:#166534;}
+
+    .muted{ color:var(--muted); }
+    .mono{ font-family:var(--mono); }
+
+    .progresswrap{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .bar{
+      height:12px;
+      border-radius:999px;
+      background:#eef2ff;
+      border:1px solid #e0e7ff;
+      overflow:hidden;
+    }
+    .bar > div{
+      height:100%;
+      background:linear-gradient(90deg, #2563eb, #22c55e);
+      width:0%;
+      transition:width .25s ease;
+    }
+    .barmeta{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .nextup{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .nextitem{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px;
+      background:var(--card);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .nextitem .title{
+      font-weight:650;
+      letter-spacing:-.01em;
+      font-size:12px;
+      margin-bottom:6px;
+    }
+    .nextitem .meta{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      color:var(--muted);
+      font-size:11px;
+      align-items:center;
+    }
+    .tinybtn{
+      font-size:11px;
+      padding:7px 9px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+
+    .timeline{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .tlrow{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:14px;
+      padding:10px;
+    }
+    .tlrow .top{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+      margin-bottom:10px;
+    }
+    .tlrow .name{
+      font-weight:650;
+      font-size:12px;
+      letter-spacing:-.01em;
+    }
+    .tlrow .submeta{
+      color:var(--muted);
+      font-size:11px;
+      margin-top:4px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .gantt{
+      position:relative;
+      height:14px;
+      border-radius:999px;
+      background:#f3f4f6;
+      border:1px solid var(--border);
+      overflow:hidden;
+    }
+    .gantt .span{
+      position:absolute;
+      top:0; bottom:0;
+      border-radius:999px;
+      background:linear-gradient(90deg,#93c5fd,#34d399);
+      border:1px solid rgba(37,99,235,.35);
+    }
+    .gantt .today{
+      position:absolute;
+      top:-4px; bottom:-4px;
+      width:2px;
+      background:var(--bad);
+      opacity:.75;
+    }
+    .legend{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      font-size:11px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px; display:inline-block;
+      border:1px solid var(--border);
+    }
+
+    canvas{ width:100%; height:200px; }
+    .chartgrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 980px){ .chartgrid{grid-template-columns:1fr;} }
+
+    .footnote{
+      font-size:11px;
+      color:var(--muted);
+      margin-top:10px;
+      line-height:1.35;
+    }
+
+    .hidden{display:none !important;}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Tasks Dashboard</h1>
+        <div class="sub">
+          Date mode: <span class="mono">date-only</span> · Timezone: <span class="mono">Asia/Kolkata</span> · Manual now, connect to Notion later
+        </div>
+      </div>
+      <div class="pillbar">
+        <button class="btn" id="exportBtn">Export JSON</button>
+        <button class="btn" id="importBtn">Import JSON</button>
+        <button class="btn danger" id="wipeBtn" title="Deletes dashboard tasks from this browser only">Wipe local data</button>
+      </div>
+    </header>
+
+    <div class="card" style="margin-bottom:14px;">
+      <div class="head">
+        <h2>Quick Add</h2>
+        <div class="muted" style="font-size:12px;">Auto rules: If Start missing → Start = Today. If Status → Done → Completed on = Today.</div>
+      </div>
+      <div class="body">
+        <div class="formgrid">
+          <div>
+            <label>Task</label>
+            <input id="taskTitle" placeholder="e.g., Finish Web Programming assignment" />
+          </div>
+          <div>
+            <label>Area</label>
+            <input id="taskArea" placeholder="e.g., Academia" />
+          </div>
+          <div>
+            <label>Priority</label>
+            <select id="taskPriority">
+              <option>High</option>
+              <option selected>Med</option>
+              <option>Low</option>
+            </select>
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="taskStatus">
+              <option selected>Not started</option>
+              <option>In progress</option>
+              <option>50% done</option>
+              <option>Done</option>
+            </select>
+          </div>
+          <div>
+            <label>Start</label>
+            <input id="taskStart" type="date" />
+          </div>
+          <div>
+            <label>Due</label>
+            <input id="taskDue" type="date" />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Notes (optional)</label>
+            <textarea id="taskNotes" placeholder="Optional notes…"></textarea>
+          </div>
+        </div>
+
+        <div class="rowactions">
+          <button class="btn primary" id="addBtn">Add task</button>
+          <button class="btn" id="clearBtn">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px;">
+      <div class="head"><h2>KPI Overview</h2></div>
+      <div class="body">
+        <div class="kpis">
+          <div class="kpi"><div class="label"><span>Total</span></div><div class="value" id="kpiTotal">0</div><div class="hint">All tasks in dashboard</div></div>
+          <div class="kpi"><div class="label"><span>Overdue</span></div><div class="value" id="kpiOverdue">0</div><div class="hint">Due date before today</div></div>
+          <div class="kpi"><div class="label"><span>Due today</span></div><div class="value" id="kpiDueToday">0</div><div class="hint">Due = today</div></div>
+          <div class="kpi"><div class="label"><span>Due 7 days</span></div><div class="value" id="kpiDue7">0</div><div class="hint">Due within 7 days</div></div>
+          <div class="kpi"><div class="label"><span>Done this week</span></div><div class="value" id="kpiDoneWeek">0</div><div class="hint">Completed on in last 7 days</div></div>
+          <div class="kpi"><div class="label"><span>No due date</span></div><div class="value" id="kpiNoDue">0</div><div class="hint">Cleanup bucket</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <div class="head"><h2>Filters</h2></div>
+          <div class="body">
+            <div class="filters">
+              <div>
+                <label>Search</label>
+                <input id="fSearch" placeholder="Search task name…" />
+              </div>
+              <div>
+                <label>Area</label>
+                <input id="fArea" placeholder="e.g., Academia" />
+              </div>
+              <div>
+                <label>Status</label>
+                <select id="fStatus">
+                  <option value="">All</option>
+                  <option>Not started</option>
+                  <option>In progress</option>
+                  <option>50% done</option>
+                  <option>Done</option>
+                </select>
+              </div>
+              <div>
+                <label>Priority</label>
+                <select id="fPriority">
+                  <option value="">All</option>
+                  <option>High</option>
+                  <option>Med</option>
+                  <option>Low</option>
+                </select>
+              </div>
+              <div>
+                <label>Overdue only</label>
+                <div class="toggle">
+                  <input id="fOverdue" type="checkbox" />
+                  <span>Show only overdue</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="rowactions">
+              <button class="btn" id="resetFiltersBtn">Reset filters</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <div class="head"><h2>All Tasks</h2><div class="muted" style="font-size:12px;" id="taskCountLabel">0 tasks</div></div>
+          <div class="body">
+            <div class="tablewrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="min-width:240px;">Task</th>
+                    <th>Area</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Start</th>
+                    <th>Due</th>
+                    <th>Completed on</th>
+                    <th style="min-width:180px;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="taskRows"></tbody>
+              </table>
+            </div>
+            <div class="footnote">
+              Tip: use this dashboard as your “manual layer” for now; later, we can swap the storage layer to read/write a Notion database while keeping the UI.
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="head"><h2>Timeline (Start → Due)</h2><div class="muted" style="font-size:12px;">Window: last 7 days to next 21 days</div></div>
+          <div class="body">
+            <div class="timeline" id="timeline"></div>
+            <div class="legend">
+              <span><span class="dot" style="background:linear-gradient(90deg,#93c5fd,#34d399); border-color: rgba(37,99,235,.35)"></span> Task span</span>
+              <span><span class="dot" style="background:var(--bad); border-color: transparent"></span> Today line</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card" style="margin-bottom:14px;">
+          <div class="head"><h2>Progress</h2></div>
+          <div class="body">
+            <div class="progresswrap">
+              <div class="bar"><div id="progressFill"></div></div>
+              <div class="barmeta">
+                <div id="progressLabel">0% weighted progress</div>
+                <div class="muted" id="progressMeta">0 tasks</div>
+              </div>
+              <div class="footnote">
+                Weighted by status: Not started = 0%, In progress = 25%, 50% done = 50%, Done = 100%.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:14px;">
+          <div class="head"><h2>Next Up</h2><div class="muted" style="font-size:12px;">Top 8 (overdue → soonest due → high priority)</div></div>
+          <div class="body">
+            <div class="nextup" id="nextUp"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="head"><h2>Charts</h2></div>
+          <div class="body">
+            <div class="chartgrid">
+              <div>
+                <div class="muted" style="font-size:12px; margin-bottom:8px;">By Status</div>
+                <canvas id="chartStatus" width="520" height="240"></canvas>
+              </div>
+              <div>
+                <div class="muted" style="font-size:12px; margin-bottom:8px;">By Area</div>
+                <canvas id="chartArea" width="520" height="240"></canvas>
+              </div>
+            </div>
+            <div class="footnote">
+              If you later connect to Notion, these will automatically reflect your database properties (Task/Area/Due/Status/Priority/Start/Completed).
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <input type="file" id="fileInput" accept="application/json" class="hidden" />
+  </div>
+
+<script>
+  // ===== Timezone helpers (Asia/Kolkata) =====
+  const TZ = "Asia/Kolkata";
+
+  function pad2(n){ return String(n).padStart(2, "0"); }
+
+  // Returns YYYY-MM-DD for "today" in Asia/Kolkata, regardless of browser timezone.
+  function todayISOInKolkata(){
+    const now = new Date();
+    const fmt = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year:"numeric", month:"2-digit", day:"2-digit" });
+    // en-CA returns YYYY-MM-DD
+    return fmt.format(now);
+  }
+
+  function parseISODate(s){
+    if(!s) return null;
+    // Interpret as date-only; use UTC midnight so math is stable.
+    const [y,m,d] = s.split("-").map(Number);
+    if(!y || !m || !d) return null;
+    return new Date(Date.UTC(y, m-1, d));
+  }
+
+  function formatISODate(s){
+    return s || "";
+  }
+
+  function daysBetweenUTC(a, b){
+    // a,b are Date objects in UTC midnight
+    const MS = 86400000;
+    return Math.round((b.getTime() - a.getTime()) / MS);
+  }
+
+  function startOfWeekISO(iso){
+    // Week start = Monday. iso is YYYY-MM-DD.
+    const d = parseISODate(iso);
+    if(!d) return null;
+    // getUTCDay: 0=Sun..6=Sat. convert to Monday-start.
+    let day = d.getUTCDay();
+    let delta = (day === 0) ? -6 : (1 - day); // move back to Monday
+    const monday = new Date(d.getTime() + delta * 86400000);
+    return monday;
+  }
+
+  // ===== Data model =====
+  const STORAGE_KEY = "tasksDashboard_v1";
+
+  const STATUS_WEIGHTS = {
+    "Not started": 0,
+    "In progress": 0.25,
+    "50% done": 0.5,
+    "Done": 1
+  };
+
+  function newId(){
+    return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return { tasks: [] };
+      const data = JSON.parse(raw);
+      if(!data || !Array.isArray(data.tasks)) return { tasks: [] };
+      return data;
+    }catch(e){
+      return { tasks: [] };
+    }
+  }
+
+  function saveState(state){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  let state = loadState();
+
+  // ===== UI Elements =====
+  const el = (id) => document.getElementById(id);
+
+  const taskTitle = el("taskTitle");
+  const taskArea = el("taskArea");
+  const taskPriority = el("taskPriority");
+  const taskStatus = el("taskStatus");
+  const taskStart = el("taskStart");
+  const taskDue = el("taskDue");
+  const taskNotes = el("taskNotes");
+
+  const addBtn = el("addBtn");
+  const clearBtn = el("clearBtn");
+
+  const exportBtn = el("exportBtn");
+  const importBtn = el("importBtn");
+  const wipeBtn = el("wipeBtn");
+  const fileInput = el("fileInput");
+
+  const fSearch = el("fSearch");
+  const fArea = el("fArea");
+  const fStatus = el("fStatus");
+  const fPriority = el("fPriority");
+  const fOverdue = el("fOverdue");
+  const resetFiltersBtn = el("resetFiltersBtn");
+
+  const taskRows = el("taskRows");
+  const taskCountLabel = el("taskCountLabel");
+
+  const kpiTotal = el("kpiTotal");
+  const kpiOverdue = el("kpiOverdue");
+  const kpiDueToday = el("kpiDueToday");
+  const kpiDue7 = el("kpiDue7");
+  const kpiDoneWeek = el("kpiDoneWeek");
+  const kpiNoDue = el("kpiNoDue");
+
+  const progressFill = el("progressFill");
+  const progressLabel = el("progressLabel");
+  const progressMeta = el("progressMeta");
+
+  const nextUp = el("nextUp");
+  const timeline = el("timeline");
+
+  const chartStatus = el("chartStatus");
+  const chartArea = el("chartArea");
+
+  // ===== Core logic =====
+  function normalizeTask(t){
+    const out = { ...t };
+    out.title = (out.title || "").trim();
+    out.area = (out.area || "").trim();
+    out.priority = out.priority || "Med";
+    out.status = out.status || "Not started";
+    out.start = out.start || "";
+    out.due = out.due || "";
+    out.notes = out.notes || "";
+    out.completedOn = out.completedOn || "";
+    return out;
+  }
+
+  function addTaskFromForm(){
+    const title = taskTitle.value.trim();
+    if(!title){
+      alert("Please enter a task name.");
+      return;
+    }
+
+    const today = todayISOInKolkata();
+
+    // Option C: if start missing, set to today.
+    const startISO = (taskStart.value || "").trim() || today;
+
+    const status = taskStatus.value;
+    const completedOn = (status === "Done") ? today : "";
+
+    const t = normalizeTask({
+      id: newId(),
+      title,
+      area: taskArea.value.trim(),
+      priority: taskPriority.value,
+      status,
+      start: startISO,
+      due: (taskDue.value || "").trim(),
+      completedOn,
+      notes: taskNotes.value.trim(),
+      createdAt: today,
+      updatedAt: today
+    });
+
+    state.tasks.unshift(t);
+    saveState(state);
+    clearForm();
+    render();
+  }
+
+  function clearForm(){
+    taskTitle.value = "";
+    taskArea.value = "";
+    taskPriority.value = "Med";
+    taskStatus.value = "Not started";
+    taskStart.value = "";
+    taskDue.value = "";
+    taskNotes.value = "";
+    taskTitle.focus();
+  }
+
+  function updateTask(id, patch){
+    const today = todayISOInKolkata();
+    state.tasks = state.tasks.map(t => {
+      if(t.id !== id) return t;
+      let next = normalizeTask({ ...t, ...patch, updatedAt: today });
+
+      // Enforce Start missing -> Start = today
+      if(!next.start) next.start = today;
+
+      // Completed on auto logic
+      const wasDone = (t.status === "Done");
+      const isDone = (next.status === "Done");
+      if(!wasDone && isDone){
+        next.completedOn = today;
+      }else if(wasDone && !isDone){
+        next.completedOn = "";
+      }
+      return next;
+    });
+
+    saveState(state);
+    render();
+  }
+
+  function deleteTask(id){
+    if(!confirm("Delete this task?")) return;
+    state.tasks = state.tasks.filter(t => t.id !== id);
+    saveState(state);
+    render();
+  }
+
+  function applyFilters(tasks){
+    const q = fSearch.value.trim().toLowerCase();
+    const area = fArea.value.trim().toLowerCase();
+    const st = fStatus.value;
+    const pr = fPriority.value;
+    const overdueOnly = fOverdue.checked;
+
+    const today = todayISOInKolkata();
+    const todayD = parseISODate(today);
+
+    return tasks.filter(t => {
+      if(q && !t.title.toLowerCase().includes(q)) return false;
+      if(area && !t.area.toLowerCase().includes(area)) return false;
+      if(st && t.status !== st) return false;
+      if(pr && t.priority !== pr) return false;
+
+      if(overdueOnly){
+        const dueD = parseISODate(t.due);
+        if(!dueD) return false;
+        if(daysBetweenUTC(dueD, todayD) <= 0) return false; // dueD < today
+      }
+      return true;
+    });
+  }
+
+  function priorityRank(p){
+    if(p === "High") return 0;
+    if(p === "Med") return 1;
+    return 2;
+  }
+
+  function statusClass(s){
+    if(s === "Not started") return "ns";
+    if(s === "In progress") return "ip";
+    if(s === "50% done") return "half";
+    return "done";
+  }
+
+  function priorityClass(p){
+    if(p === "High") return "high";
+    if(p === "Med") return "med";
+    return "low";
+  }
+
+  function computeKPIs(allTasks){
+    const today = todayISOInKolkata();
+    const todayD = parseISODate(today);
+
+    let total = allTasks.length;
+    let overdue = 0, dueToday = 0, due7 = 0, noDue = 0, doneWeek = 0;
+
+    const weekStart = startOfWeekISO(today); // Date (UTC)
+    const weekEnd = new Date(weekStart.getTime() + 7*86400000);
+
+    for(const t of allTasks){
+      const dueD = parseISODate(t.due);
+      if(!dueD) noDue++;
+
+      if(dueD){
+        const diff = daysBetweenUTC(todayD, dueD); // today->due
+        if(diff === 0) dueToday++;
+        if(diff >= 0 && diff <= 7) due7++;
+        if(daysBetweenUTC(dueD, todayD) > 0) overdue++; // due < today
+      }
+
+      if(t.completedOn){
+        const c = parseISODate(t.completedOn);
+        if(c && c >= weekStart && c < weekEnd) doneWeek++;
+      }
+    }
+
+    return { total, overdue, dueToday, due7, noDue, doneWeek };
+  }
+
+  function computeWeightedProgress(tasks){
+    if(tasks.length === 0) return 0;
+    let sum = 0;
+    for(const t of tasks){
+      sum += (STATUS_WEIGHTS[t.status] ?? 0);
+    }
+    return sum / tasks.length;
+  }
+
+  function renderTable(tasks){
+    taskRows.innerHTML = "";
+
+    for(const t of tasks){
+      const tr = document.createElement("tr");
+
+      const tdTitle = document.createElement("td");
+      tdTitle.innerHTML = `<div style="font-weight:650">${escapeHtml(t.title)}</div>${t.notes ? `<div class="muted" style="margin-top:6px;">${escapeHtml(t.notes)}</div>` : ""}`;
+
+      const tdArea = document.createElement("td");
+      tdArea.textContent = t.area || "—";
+      tdArea.className = t.area ? "" : "muted";
+
+      const tdPri = document.createElement("td");
+      tdPri.innerHTML = `<span class="tag ${priorityClass(t.priority)}">${t.priority}</span>`;
+
+      const tdStatus = document.createElement("td");
+      tdStatus.innerHTML = `<span class="status ${statusClass(t.status)}">${t.status}</span>`;
+
+      const tdStart = document.createElement("td");
+      tdStart.textContent = formatISODate(t.start) || "—";
+      tdStart.className = t.start ? "mono" : "muted";
+
+      const tdDue = document.createElement("td");
+      tdDue.textContent = formatISODate(t.due) || "—";
+      tdDue.className = t.due ? "mono" : "muted";
+
+      const tdComp = document.createElement("td");
+      tdComp.textContent = formatISODate(t.completedOn) || "—";
+      tdComp.className = t.completedOn ? "mono" : "muted";
+
+      const tdActions = document.createElement("td");
+      tdActions.innerHTML = `
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="tinybtn" data-act="edit" data-id="${t.id}">Edit</button>
+          <button class="tinybtn" data-act="done" data-id="${t.id}">Mark Done</button>
+          <button class="tinybtn" data-act="delete" data-id="${t.id}" style="border-color:#fecaca; color:#991b1b;">Delete</button>
+        </div>
+      `;
+
+      tr.appendChild(tdTitle);
+      tr.appendChild(tdArea);
+      tr.appendChild(tdPri);
+      tr.appendChild(tdStatus);
+      tr.appendChild(tdStart);
+      tr.appendChild(tdDue);
+      tr.appendChild(tdComp);
+      tr.appendChild(tdActions);
+
+      taskRows.appendChild(tr);
+    }
+
+    taskCountLabel.textContent = `${tasks.length} task${tasks.length === 1 ? "" : "s"} (filtered)`;
+
+    taskRows.querySelectorAll("button[data-act]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-id");
+        const act = btn.getAttribute("data-act");
+        const t = state.tasks.find(x => x.id === id);
+        if(!t) return;
+
+        if(act === "delete") deleteTask(id);
+        if(act === "done") updateTask(id, { status: "Done" });
+        if(act === "edit") openEditPrompt(t);
+      });
+    });
+  }
+
+  function openEditPrompt(t){
+    const title = prompt("Edit Task title:", t.title);
+    if(title === null) return;
+
+    const area = prompt("Edit Area:", t.area || "");
+    if(area === null) return;
+
+    const priority = prompt("Edit Priority (High/Med/Low):", t.priority);
+    if(priority === null) return;
+
+    const status = prompt("Edit Status (Not started/In progress/50% done/Done):", t.status);
+    if(status === null) return;
+
+    const start = prompt("Edit Start (YYYY-MM-DD). Leave blank to auto-set today:", t.start || "");
+    if(start === null) return;
+
+    const due = prompt("Edit Due (YYYY-MM-DD). Blank allowed:", t.due || "");
+    if(due === null) return;
+
+    const notes = prompt("Edit Notes:", t.notes || "");
+    if(notes === null) return;
+
+    const cleanPri = ["High","Med","Low"].includes(priority) ? priority : t.priority;
+    const cleanStatus = ["Not started","In progress","50% done","Done"].includes(status) ? status : t.status;
+
+    updateTask(t.id, {
+      title: String(title).trim(),
+      area: String(area).trim(),
+      priority: cleanPri,
+      status: cleanStatus,
+      start: String(start).trim(),
+      due: String(due).trim(),
+      notes: String(notes).trim()
+    });
+  }
+
+  function renderNextUp(allTasks){
+    nextUp.innerHTML = "";
+
+    const today = todayISOInKolkata();
+    const todayD = parseISODate(today);
+
+    // next up logic: exclude Done
+    const candidates = allTasks
+      .filter(t => t.status !== "Done")
+      .map(t => {
+        const dueD = parseISODate(t.due);
+        const overdue = dueD ? (daysBetweenUTC(dueD, todayD) > 0) : false; // due < today
+        const dueIn = dueD ? daysBetweenUTC(todayD, dueD) : 99999;
+        return { ...t, _overdue: overdue, _dueIn: dueIn };
+      })
+      .sort((a,b) => {
+        // overdue first
+        if(a._overdue !== b._overdue) return a._overdue ? -1 : 1;
+        // soonest due next (tasks without due date last)
+        if(a._dueIn !== b._dueIn) return a._dueIn - b._dueIn;
+        // priority
+        const pr = priorityRank(a.priority) - priorityRank(b.priority);
+        if(pr !== 0) return pr;
+        return a.title.localeCompare(b.title);
+      })
+      .slice(0, 8);
+
+    if(candidates.length === 0){
+      nextUp.innerHTML = `<div class="muted">Nothing queued. Add tasks or remove filters.</div>`;
+      return;
+    }
+
+    for(const t of candidates){
+      const dueTxt = t.due ? t.due : "No due date";
+      const metaBits = [
+        t.area ? `Area: ${escapeHtml(t.area)}` : "No area",
+        `Due: ${escapeHtml(dueTxt)}`,
+      ];
+
+      const node = document.createElement("div");
+      node.className = "nextitem";
+      node.innerHTML = `
+        <div>
+          <div class="title">${escapeHtml(t.title)}</div>
+          <div class="meta">
+            <span class="tag ${priorityClass(t.priority)}">${t.priority}</span>
+            <span class="status ${statusClass(t.status)}">${t.status}</span>
+            <span class="muted">${metaBits.join(" · ")}</span>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+          <button class="tinybtn" data-id="${t.id}" data-act="done">Done</button>
+          <button class="tinybtn" data-id="${t.id}" data-act="edit">Edit</button>
+        </div>
+      `;
+
+      node.querySelectorAll("button[data-act]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          const act = btn.getAttribute("data-act");
+          const task = state.tasks.find(x => x.id === id);
+          if(!task) return;
+          if(act === "done") updateTask(id, { status: "Done" });
+          if(act === "edit") openEditPrompt(task);
+        });
+      });
+
+      nextUp.appendChild(node);
+    }
+  }
+
+  function renderTimeline(allTasks){
+    timeline.innerHTML = "";
+
+    const todayISO = todayISOInKolkata();
+    const todayD = parseISODate(todayISO);
+
+    // Window: [-7, +21] days relative to today
+    const winStart = new Date(todayD.getTime() - 7 * 86400000);
+    const winEnd = new Date(todayD.getTime() + 21 * 86400000);
+    const winDays = Math.max(1, daysBetweenUTC(winStart, winEnd));
+
+    // Prefer non-done tasks first
+    const tasks = [...allTasks].sort((a,b) => {
+      if(a.status === "Done" && b.status !== "Done") return 1;
+      if(a.status !== "Done" && b.status === "Done") return -1;
+      // due date
+      const ad = parseISODate(a.due) || new Date(Date.UTC(9999,0,1));
+      const bd = parseISODate(b.due) || new Date(Date.UTC(9999,0,1));
+      return ad - bd;
+    }).slice(0, 12);
+
+    if(tasks.length === 0){
+      timeline.innerHTML = `<div class="muted">Add tasks to see a timeline.</div>`;
+      return;
+    }
+
+    const todayPos = Math.max(0, Math.min(100, (daysBetweenUTC(winStart, todayD) / winDays) * 100));
+
+    for(const tRaw of tasks){
+      const t = normalizeTask(tRaw);
+      const startISO = t.start || todayISO;
+      const startD = parseISODate(startISO) || todayD;
+      const dueD = parseISODate(t.due);
+
+      // If no due date, show a 1-day span at start
+      const endD = dueD || startD;
+
+      // Ensure end >= start
+      const fixedEnd = (endD < startD) ? startD : endD;
+
+      const left = (daysBetweenUTC(winStart, startD) / winDays) * 100;
+      const right = (daysBetweenUTC(winStart, fixedEnd) / winDays) * 100;
+      const width = Math.max(2, (right - left)); // allow tiny width
+
+      const node = document.createElement("div");
+      node.className = "tlrow";
+
+      const dueLabel = t.due ? t.due : "No due date";
+      const startLabel = startISO;
+
+      node.innerHTML = `
+        <div class="top">
+          <div>
+            <div class="name">${escapeHtml(t.title)}</div>
+            <div class="submeta">
+              <span class="tag ${priorityClass(t.priority)}">${t.priority}</span>
+              <span class="status ${statusClass(t.status)}">${t.status}</span>
+              <span>Start: <span class="mono">${escapeHtml(startLabel)}</span></span>
+              <span>Due: <span class="mono">${escapeHtml(dueLabel)}</span></span>
+              ${t.area ? `<span>Area: ${escapeHtml(t.area)}</span>` : `<span class="muted">No area</span>`}
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:flex-start;">
+            <button class="tinybtn" data-id="${t.id}" data-act="edit">Edit</button>
+            <button class="tinybtn" data-id="${t.id}" data-act="done">Done</button>
+          </div>
+        </div>
+        <div class="gantt" aria-label="timeline">
+          <div class="span" style="left:${clamp(left, -10, 110)}%; width:${clamp(width, 2, 120)}%;"></div>
+          <div class="today" style="left:${todayPos}%;"></div>
+        </div>
+      `;
+
+      node.querySelectorAll("button[data-act]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-id");
+          const act = btn.getAttribute("data-act");
+          const task = state.tasks.find(x => x.id === id);
+          if(!task) return;
+          if(act === "done") updateTask(id, { status: "Done" });
+          if(act === "edit") openEditPrompt(task);
+        });
+      });
+
+      timeline.appendChild(node);
+    }
+  }
+
+  function renderCharts(allTasks){
+    drawBarChart(chartStatus, countByStatus(allTasks), ["Not started","In progress","50% done","Done"]);
+    drawBarChart(chartArea, countByArea(allTasks), null);
+  }
+
+  function countByStatus(tasks){
+    const out = {"Not started":0,"In progress":0,"50% done":0,"Done":0};
+    for(const t of tasks){
+      out[t.status] = (out[t.status] || 0) + 1;
+    }
+    return out;
+  }
+
+  function countByArea(tasks){
+    const out = {};
+    for(const t of tasks){
+      const a = (t.area || "").trim();
+      const key = a ? a : "No area";
+      out[key] = (out[key] || 0) + 1;
+    }
+    // Sort by count desc
+    const entries = Object.entries(out).sort((a,b)=> b[1]-a[1]);
+    const capped = entries.slice(0, 8);
+    return Object.fromEntries(capped);
+  }
+
+  function drawBarChart(canvas, dataObj, fixedOrder){
+    const ctx = canvas.getContext("2d");
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+
+    const labels = fixedOrder ? fixedOrder.filter(k => dataObj[k] !== undefined) : Object.keys(dataObj);
+    const values = labels.map(k => dataObj[k] || 0);
+    const max = Math.max(1, ...values);
+
+    // Layout
+    const pad = 18;
+    const top = 10, bottom = 24;
+    const left = pad, right = pad;
+    const plotW = W - left - right;
+    const plotH = H - top - bottom;
+
+    // Baseline
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(left, top + plotH);
+    ctx.lineTo(left + plotW, top + plotH);
+    ctx.stroke();
+
+    const barGap = 10;
+    const barW = Math.max(16, (plotW - barGap*(labels.length-1)) / labels.length);
+
+    // Bars
+    labels.forEach((lab, i) => {
+      const v = values[i];
+      const h = (v / max) * (plotH - 6);
+      const x = left + i * (barW + barGap);
+      const y = top + plotH - h;
+
+      // color by label
+      const fill = (lab === "Done") ? "#22c55e"
+                 : (lab === "In progress") ? "#60a5fa"
+                 : (lab === "50% done") ? "#fbbf24"
+                 : "#9ca3af";
+
+      roundRect(ctx, x, y, barW, h, 10, fill, "#d1d5db");
+
+      // value text
+      ctx.fillStyle = "#111827";
+      ctx.font = "12px " + getComputedStyle(document.documentElement).getPropertyValue("--sans");
+      ctx.textAlign = "center";
+      ctx.fillText(String(v), x + barW/2, Math.max(14, y - 6));
+
+      // label
+      ctx.fillStyle = "#6b7280";
+      ctx.font = "11px " + getComputedStyle(document.documentElement).getPropertyValue("--sans");
+      ctx.fillText(shortLabel(lab), x + barW/2, top + plotH + 16);
+    });
+  }
+
+  function shortLabel(s){
+    if(s.length <= 10) return s;
+    return s.slice(0,9) + "…";
+  }
+
+  function roundRect(ctx, x, y, w, h, r, fill, stroke){
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+    ctx.fillStyle = fill;
+    ctx.fill();
+    ctx.strokeStyle = stroke;
+    ctx.stroke();
+  }
+
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, (ch) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[ch]));
+  }
+
+  function render(){
+    // Normalize tasks
+    state.tasks = state.tasks.map(normalizeTask);
+    saveState(state);
+
+    const allTasks = state.tasks;
+
+    // KPIs use all tasks (not filtered)
+    const kpis = computeKPIs(allTasks);
+    kpiTotal.textContent = kpis.total;
+    kpiOverdue.textContent = kpis.overdue;
+    kpiDueToday.textContent = kpis.dueToday;
+    kpiDue7.textContent = kpis.due7;
+    kpiDoneWeek.textContent = kpis.doneWeek;
+    kpiNoDue.textContent = kpis.noDue;
+
+    // Progress uses all tasks
+    const p = computeWeightedProgress(allTasks);
+    const pct = Math.round(p * 100);
+    progressFill.style.width = pct + "%";
+    progressLabel.textContent = `${pct}% weighted progress`;
+    progressMeta.textContent = `${allTasks.length} task${allTasks.length===1?"":"s"}`;
+
+    // Table uses filtered
+    const filtered = applyFilters(allTasks);
+    renderTable(filtered);
+
+    // Next Up + Timeline + Charts use all tasks (so you always see big picture)
+    renderNextUp(allTasks);
+    renderTimeline(allTasks);
+    renderCharts(allTasks);
+  }
+
+  // ===== Import/Export =====
+  function exportJson(){
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      timezone: TZ,
+      schema: "tasksDashboard_v1",
+      data: state
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "tasks-dashboard-export.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function importJsonFromFile(file){
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const payload = JSON.parse(reader.result);
+        const incoming = payload.data ? payload.data : payload; // allow raw state too
+        if(!incoming || !Array.isArray(incoming.tasks)) throw new Error("Invalid file format");
+
+        // Merge strategy: replace (simplest)
+        if(!confirm("Import will replace your current dashboard data in this browser. Continue?")) return;
+        state = { tasks: incoming.tasks.map(normalizeTask) };
+        saveState(state);
+        render();
+      }catch(e){
+        alert("Import failed: " + e.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  // ===== Events =====
+  addBtn.addEventListener("click", addTaskFromForm);
+  clearBtn.addEventListener("click", clearForm);
+
+  [fSearch, fArea, fStatus, fPriority, fOverdue].forEach(x => {
+    x.addEventListener("input", render);
+    x.addEventListener("change", render);
+  });
+
+  resetFiltersBtn.addEventListener("click", () => {
+    fSearch.value = "";
+    fArea.value = "";
+    fStatus.value = "";
+    fPriority.value = "";
+    fOverdue.checked = false;
+    render();
+  });
+
+  exportBtn.addEventListener("click", exportJson);
+
+  importBtn.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", () => {
+    const file = fileInput.files && fileInput.files[0];
+    if(file) importJsonFromFile(file);
+    fileInput.value = "";
+  });
+
+  wipeBtn.addEventListener("click", () => {
+    if(!confirm("This will delete all dashboard tasks stored in this browser (localStorage). Continue?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    state = { tasks: [] };
+    render();
+  });
+
+  // Allow Enter to add task when cursor is in title field
+  taskTitle.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+      e.preventDefault();
+      addTaskFromForm();
+    }
+  });
+
+  // Initial render
+  render();
+
+  // Seed example (optional): uncomment to add sample tasks once
+  /*
+  if(state.tasks.length === 0){
+    const today = todayISOInKolkata();
+    state.tasks = [
+      {id:newId(), title:"Example: Review lecture notes", area:"Academia", priority:"Med", status:"In progress", start:today, due:"", completedOn:"", notes:"", createdAt:today, updatedAt:today},
+      {id:newId(), title:"Example: Apply to 1 internship", area:"Internship", priority:"High", status:"Not started", start:today, due:today, completedOn:"", notes:"", createdAt:today, updatedAt:today},
+    ];
+    saveState(state);
+    render();
+  }
+  */
+</script>
+</body>
+</html>
