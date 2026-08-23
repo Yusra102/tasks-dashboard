@@ -852,11 +852,10 @@
   }
 
   function deleteTask(id){
-    if(!confirm("Delete this task?")) return;
-    state.tasks = state.tasks.filter(t => t.id !== id);
-    saveState(state);
-    render();
-  }
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  saveState(state);
+  render();
+}
 
   function applyFilters(tasks){
     const q = fSearch.value.trim().toLowerCase();
